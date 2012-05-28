@@ -17,7 +17,7 @@ template <class T, class... U>
 std::string stringify(T&& t, U&&... u)
 {
    std::ostringstream stream;
-   stream << std::forward<T>(t) << stringify(u...);
+   stream << std::forward<T>(t) << stringify(std::forward<U>(u)...);
    return stream.str();
 }
 
