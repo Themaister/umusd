@@ -140,9 +140,11 @@ inline std::string plain_action(Delegate func)
 
 void TCPSocket::init_command_map()
 {
-   command_map["NOOP"] = [](const std::string &arg) -> std::string { std::cerr << "NOOP (" << arg << ")" << std::endl; return "OK"; };
+   command_map["NOOP"] = [](EventHandler &, const std::string &arg) -> std::string {
+      std::cerr << "NOOP (" << arg << ")" << std::endl; return "OK";
+   };
 
-   command_map["PLAY"] = [this](const std::string &arg) -> std::string {
+   command_map["PLAY"] = [this](EventHandler &, const std::string &arg) -> std::string {
       try
       {
          if (remote)
@@ -160,25 +162,25 @@ void TCPSocket::init_command_map()
       }
    };
 
-   command_map["STOP"] = [this](const std::string &) -> std::string {
+   command_map["STOP"] = [this](EventHandler &, const std::string &) -> std::string {
       return plain_action(std::bind(&Remote::stop, remote));
    };
 
-   command_map["PAUSE"] = [this](const std::string &) -> std::string {
+   command_map["PAUSE"] = [this](EventHandler &, const std::string &) -> std::string {
       return plain_action(std::bind(&Remote::pause, remote));
    };
 
-   command_map["UNPAUSE"] = [this](const std::string &) -> std::string {
+   command_map["UNPAUSE"] = [this](EventHandler &, const std::string &) -> std::string {
       return plain_action(std::bind(&Remote::unpause, remote));
    };
 
-   command_map["SEEK"] = [this](const std::string &arg) -> std::string {
+   command_map["SEEK"] = [this](EventHandler &, const std::string &arg) -> std::string {
       int time = std::strtol(arg.c_str(), nullptr, 0);
       std::cerr << "Time: " << time << std::endl;
       return plain_action(std::bind(&Remote::seek, remote, time));
    };
 
-   command_map["POS"] = [this](const std::string &arg) -> std::string {
+   command_map["POS"] = [this](EventHandler &, const std::string &arg) -> std::string {
       try
       {
          float pos = remote->pos();
@@ -190,9 +192,14 @@ void TCPSocket::init_command_map()
          return "ERROR";
       }
    };
+
+   command_map["DIE"] = [this](EventHandler &event, const std::string &) -> std::string {
+      event.kill();
+      return "OK";
+   };
 }
 
-void TCPSocket::parse_command(const std::string &cmd)
+void TCPSocket::parse_command(EventHandler &event, const std::string &cmd)
 {
    std::cerr << "Command: " << cmd << std::endl;
    auto split = cmd.find(' ');
@@ -208,7 +215,7 @@ void TCPSocket::parse_command(const std::string &cmd)
    auto cb = command_map[name];
    if (cb)
    {
-      auto reply = cb(arg);
+      auto reply = cb(event, arg);
       reply += "\r\n";
       if (::write(fd, reply.data(), reply.size()) < static_cast<ssize_t>(reply.size()))
          throw std::runtime_error("Failed writing to command socket.\n");
@@ -217,7 +224,7 @@ void TCPSocket::parse_command(const std::string &cmd)
       throw std::runtime_error(stringify("Unrecognized command: \"", name, "\""));
 }
 
-void TCPSocket::parse_commands()
+void TCPSocket::parse_commands(EventHandler &event)
 {
    if (command_buf.size() > max_cmd_size)
       command_buf.clear();
@@ -229,7 +236,7 @@ void TCPSocket::parse_commands()
          return;
 
       auto cmd = command_buf.substr(0, first);
-      parse_command(cmd);
+      parse_command(event, cmd);
 
       command_buf.erase(0, first + 2);
    }
@@ -241,7 +248,7 @@ void TCPSocket::handle(EventHandler &event)
 
    try
    {
-      parse_commands();
+      parse_commands(event);
    }
    catch (const std::exception &e)
    {

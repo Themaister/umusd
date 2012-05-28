@@ -40,6 +40,11 @@ void EventHandler::remove(const EventHandled &fd)
    epoll_ctl(epfd, EPOLL_CTL_DEL, fd.pollfd(), nullptr);
 }
 
+void EventHandler::kill()
+{
+   killed = true;
+}
+
 bool EventHandler::wait()
 {
    struct epoll_event events[16];

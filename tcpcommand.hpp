@@ -35,12 +35,15 @@ class TCPSocket : public EventHandled
       std::string command_buf;
 
       void flush_buffer();
-      void parse_commands();
-      void parse_command(const std::string &cmd);
+      void parse_commands(EventHandler &handler);
+      void parse_command(EventHandler &handler, const std::string &cmd);
 
       enum { max_cmd_size = 4096 };
 
-      std::map<std::string, std::function<std::string (const std::string &)>> command_map;
+      std::map<std::string,
+         std::function<std::string (EventHandler &,
+               const std::string &)>> command_map;
+
       void init_command_map();
 };
 
