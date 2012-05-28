@@ -19,7 +19,7 @@ EventHandler::~EventHandler()
 
 void EventHandler::add(std::weak_ptr<EventHandled> fd, int events)
 {
-   struct epoll_event event = {0};
+   struct epoll_event event{};
    event.events = events;
 
    auto fd_ptr = fd.lock();
