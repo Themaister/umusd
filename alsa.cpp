@@ -38,6 +38,8 @@ std::string ALSA::default_device() const
 
 void ALSA::init(unsigned channels, unsigned rate, const std::string &dev)
 {
+   stop();
+
    try
    {
       TRY(snd_pcm_open(&pcm, dev.c_str(), SND_PCM_STREAM_PLAYBACK, 0),
