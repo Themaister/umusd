@@ -15,7 +15,7 @@ class Audio : public EventHandled
       virtual std::string default_device() const = 0;
 
       void set_media(std::weak_ptr<FF> ff);
-      void handle(EventHandler &handler);
+      virtual void handle(EventHandler &handler);
 
       virtual void init(unsigned channels, unsigned rate, const std::string &dev) = 0;
       virtual void write(const FF::Buffer &buf) = 0;
@@ -23,7 +23,7 @@ class Audio : public EventHandled
 
       virtual bool active() const = 0;
 
-   private:
+   protected:
       std::weak_ptr<FF> ff;
 };
 

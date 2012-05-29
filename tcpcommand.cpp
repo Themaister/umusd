@@ -58,19 +58,19 @@ void TCPCommand::handle(EventHandler &handler)
    if (newfd < 0)
       return;
    
-   connections.push_back(std::make_shared<TCPSocket>(newfd));
-
-   handler.add(connections.back(), EPOLLIN);
-   connections.back()->set_remote(*remote);
-
    connections.erase(std::remove_if(std::begin(connections), std::end(connections),
          [](std::shared_ptr<TCPSocket> sock) { return sock->dead(); }),
          connections.end());
+
+   auto conn = std::make_shared<TCPSocket>(newfd);
+   handler.add(conn);
+   conn->set_remote(*remote);
+   connections.push_back(conn);
 }
 
-int TCPCommand::pollfd() const
+EventHandled::PollList TCPCommand::pollfds() const
 {
-   return fd;
+   return {{fd, EPOLLIN}};
 }
 
 void TCPCommand::set_remote(Remote &remote)
@@ -110,9 +110,9 @@ TCPSocket::TCPSocket(int fd) : fd(fd), remote(nullptr), is_dead(false)
 
 TCPSocket::~TCPSocket() { kill_sock(); }
 
-int TCPSocket::pollfd() const
+EventHandled::PollList TCPSocket::pollfds() const
 {
-   return fd;
+   return {{fd, EPOLLIN}};
 }
 
 void TCPSocket::kill_sock()

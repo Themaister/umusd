@@ -4,8 +4,8 @@ OBJECTS := $(SOURCES:.cpp=.o)
 HEADERS := $(wildcard *.hpp)
 
 CXX := g++
-CXXFLAGS += -O3 -g -std=c++11 -Wall -pedantic $(shell pkg-config libavutil libavformat libavcodec --cflags)
-LDFLAGS += $(shell pkg-config libavutil libavformat libavcodec --libs)
+CXXFLAGS += -O3 -g -std=c++11 -Wall -pedantic $(shell pkg-config libavutil libavformat libavcodec alsa --cflags)
+LDFLAGS += $(shell pkg-config libavutil libavformat libavcodec alsa --libs)
 
 all: $(TARGET)
 

@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "oss.hpp"
+#include "alsa.hpp"
 #include "ffmpeg.hpp"
 #include "tcpcommand.hpp"
 #include "eventhandler.hpp"

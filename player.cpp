@@ -7,8 +7,8 @@ Player::Player()
    cmd->set_remote(*this);
 
    event = std::unique_ptr<EventHandler>(new EventHandler);
-   dev = std::shared_ptr<Audio>(new OSS);
-   event->add(cmd, EPOLLIN);
+   dev = std::shared_ptr<Audio>(new ALSA);
+   event->add(cmd);
 }
 
 void Player::run()
@@ -23,7 +23,7 @@ void Player::play(const std::string& path)
 
    auto info = ff->info();
    dev->init(info.channels, info.rate, dev->default_device());
-   event->add(dev, EPOLLOUT);
+   event->add(dev);
 }
 
 void Player::stop()
@@ -54,7 +54,7 @@ void Player::unpause()
    if (!dev->active())
    {
       dev->init(info.channels, info.rate, dev->default_device());
-      event->add(dev, EPOLLOUT);
+      event->add(dev);
    }
 }
 

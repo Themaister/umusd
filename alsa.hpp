@@ -1,25 +1,30 @@
-#ifndef OSS_HPP__
-#define OSS_HPP__
+#ifndef ALSA_HPP__
+#define ALSA_HPP__
 
 #include "audio.hpp"
+#include <asoundlib.h>
+#include <sys/poll.h>
 
-class OSS : public Audio
+class ALSA : public Audio
 {
    public:
-      OSS();
-      ~OSS();
+      ALSA();
+      ~ALSA();
 
       std::string default_device() const;
       void init(unsigned channels, unsigned rate, const std::string &dev);
       void write(const FF::Buffer &buf);
       void stop();
 
+      void handle(EventHandler &handler) override;
+
       bool active() const;
 
       EventHandled::PollList pollfds() const;
 
    private:
-      int fd;
+      snd_pcm_t *pcm;
+      std::vector<struct pollfd> fds;
 };
 
 #endif

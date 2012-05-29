@@ -69,8 +69,8 @@ void OSS::write(const FF::Buffer &buf)
    }
 }
 
-int OSS::pollfd() const
+EventHandled::PollList OSS::pollfds() const
 {
-   return fd;
+   return {{fd, EPOLLOUT}};
 }
 
