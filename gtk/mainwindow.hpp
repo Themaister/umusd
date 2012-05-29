@@ -1,5 +1,6 @@
 #include <gtkmm.h>
 #include "connection.hpp"
+#include <list>
 
 class MainWindow : public Gtk::Window
 {
@@ -25,6 +26,9 @@ class MainWindow : public Gtk::Window
       {
          Gtk::Label title, artist, album;
       } meta;
+
+      Gtk::FileChooserDialog diag;
+      void add_filter(const std::string &name, const std::list<std::string> &ext);
 
       void play_file();
       void update_meta(Connection &con);

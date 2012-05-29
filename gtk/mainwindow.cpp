@@ -4,7 +4,7 @@
 MainWindow::MainWindow() :
    play(Gtk::Stock::MEDIA_PLAY), stop(Gtk::Stock::MEDIA_STOP),
    pause(Gtk::Stock::MEDIA_PAUSE), open(Gtk::Stock::OPEN),
-   grid(3, 2)
+   grid(3, 2), diag(*this, "Open File ...")
 {
    set_title("uMusC");
    set_border_width(5);
@@ -58,11 +58,30 @@ MainWindow::MainWindow() :
    progress.set_fraction(0.0);
    progress.set_text("N/A");
 
+   diag.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+   diag.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_ACCEPT);
+
+   add_filter("Media files", {"*.mp3", "*.flac", "*.vorbis", "*.m4a"});
+   add_filter("MP3 files", {"*.mp3"});
+   add_filter("FLAC files", {"*.flac"});
+   add_filter("Vorbis files", {"*.vorbis"});
+   add_filter("M4A files", {"*.m4a"});
+   add_filter("Any file", {"*"});
+
    add(vbox);
    show_all();
 
    Glib::signal_timeout().connect_seconds(sigc::mem_fun(*this, &MainWindow::on_timer_tick), 1); 
    on_timer_tick();
+}
+
+void MainWindow::add_filter(const std::string &name, const std::list<std::string> &ext)
+{
+   Gtk::FileFilter filt;
+   filt.set_name(name);
+   for (auto &str : ext)
+      filt.add_pattern(str);
+   diag.add_filter(filt);
 }
 
 bool MainWindow::on_timer_tick()
@@ -216,16 +235,6 @@ void MainWindow::on_pause_clicked()
 
 void MainWindow::on_open_clicked()
 {
-   Gtk::FileChooserDialog diag(*this, "Open File ...");
-
-   diag.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
-   diag.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_ACCEPT);
-
-   Gtk::FileFilter filt;
-   filt.set_name("Any file");
-   filt.add_pattern("*");
-   diag.add_filter(filt);
-
    if (diag.run() == Gtk::RESPONSE_ACCEPT)
    {
       std::string file;
@@ -239,5 +248,7 @@ void MainWindow::on_open_clicked()
       last_file = file;
       play_file();
    }
+
+   diag.hide();
 }
 
