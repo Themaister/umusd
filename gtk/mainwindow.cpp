@@ -63,10 +63,10 @@ MainWindow::MainWindow() :
    diag.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
    diag.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_ACCEPT);
 
-   add_filter("Media files", {"*.mp3", "*.flac", "*.vorbis", "*.m4a"});
+   add_filter("Media files", {"*.mp3", "*.flac", "*.ogg", "*.m4a"});
    add_filter("MP3 files", {"*.mp3"});
    add_filter("FLAC files", {"*.flac"});
-   add_filter("Vorbis files", {"*.vorbis"});
+   add_filter("Vorbis files", {"*.ogg"});
    add_filter("M4A files", {"*.m4a"});
    add_filter("Any file", {"*"});
 
