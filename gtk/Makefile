@@ -6,7 +6,7 @@ HEADERS := $(wildcard *.hpp)
 PREFIX = /usr/local
 
 CXX := g++
-CXXFLAGS += -O3 -g -std=c++11 -Wall -pedantic $(shell pkg-config gtkmm-2.4 --cflags)
+CXXFLAGS += -O3 -g -std=gnu++0x -Wall -pedantic $(shell pkg-config gtkmm-2.4 --cflags)
 LDFLAGS += $(shell pkg-config gtkmm-2.4 --libs)
 
 all: $(TARGET)
