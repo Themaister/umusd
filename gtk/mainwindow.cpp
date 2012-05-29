@@ -57,6 +57,8 @@ MainWindow::MainWindow() :
 
    progress.set_fraction(0.0);
    progress.set_text("N/A");
+   signal_button_press_event().connect(sigc::mem_fun(*this, &MainWindow::on_button_press));
+   set_events(Gdk::BUTTON_PRESS_MASK);
 
    diag.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
    diag.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_ACCEPT);
@@ -73,6 +75,41 @@ MainWindow::MainWindow() :
 
    Glib::signal_timeout().connect_seconds(sigc::mem_fun(*this, &MainWindow::on_timer_tick), 1); 
    on_timer_tick();
+}
+
+bool MainWindow::on_button_press(GdkEventButton *btn)
+{
+   int x, y;
+   progress.get_pointer(x, y);
+   int width = progress.get_width();
+   int height = progress.get_height();
+
+   if (x < 0 || y < 0 || x >= width || y >= height)
+      return true;
+
+   float frac = static_cast<float>(x) / width;
+   seek(frac);
+   return true;
+}
+
+void MainWindow::seek(float rel)
+{
+   try
+   {
+      Connection con;
+      auto res = con.command("POS\r\n");
+      auto list = string_split(res, " ");
+      if (list.size() != 2)
+         return;
+
+      unsigned len = std::strtoul(list[1].c_str(), nullptr, 0);
+      con.command(stringify("SEEK \"", static_cast<int>(rel * len), "\"\r\n"));
+      update_pos(con);
+   }
+   catch(const std::exception &e)
+   {
+      std::cerr << e.what() << std::endl;
+   }
 }
 
 void MainWindow::add_filter(const std::string &name, const std::list<std::string> &ext)

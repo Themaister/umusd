@@ -15,6 +15,7 @@ class MainWindow : public Gtk::Window
       void on_pause_clicked();
       void on_open_clicked();
       bool on_timer_tick();
+      bool on_button_press(GdkEventButton *btn);
 
       Gtk::VBox vbox;
       Gtk::ProgressBar progress;
@@ -34,6 +35,7 @@ class MainWindow : public Gtk::Window
       void update_meta(Connection &con);
       void update_pos(Connection &con);
       void reset_meta_pos();
+      void seek(float rel);
 
       static std::string sec_to_text(unsigned sec);
 };
