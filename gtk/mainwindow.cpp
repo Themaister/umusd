@@ -104,6 +104,7 @@ void MainWindow::seek(float rel)
 
       unsigned len = std::strtoul(list[1].c_str(), nullptr, 0);
       con.command(stringify("SEEK \"", static_cast<int>(rel * len), "\"\r\n"));
+      con.command("UNPAUSE\r\n");
       update_pos(con);
    }
    catch(const std::exception &e)
