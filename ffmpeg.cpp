@@ -17,6 +17,7 @@ FF::FF(const std::string &path)
          throw std::runtime_error("Failed to get stream info.\n");
 
       resolve_codecs();
+      get_media_info();
    } 
    catch(...)
    {
@@ -64,6 +65,32 @@ FF& FF::operator=(FF &&ff)
    return *this;
 }
 
+void FF::get_metadata(AVDictionary *meta)
+{
+   auto entry = av_dict_get(meta, "title", nullptr, 0);
+   if (entry && entry->value)
+      media_info.title = entry->value;
+
+   entry = av_dict_get(meta, "artist", nullptr, 0);
+   if (entry && entry->value)
+      media_info.artist = entry->value;
+
+   entry = av_dict_get(meta, "album", nullptr, 0);
+   if (entry && entry->value)
+      media_info.album = entry->value;
+}
+
+void FF::get_media_info()
+{
+   media_info.channels = actx->channels;
+   media_info.rate = actx->sample_rate;
+
+   media_info.duration = fctx->streams[aud_stream]->duration * av_q2d(fctx->streams[aud_stream]->time_base);
+
+   get_metadata(fctx->metadata);
+   get_metadata(fctx->streams[aud_stream]->metadata);
+}
+
 void FF::resolve_codecs()
 {
    for (unsigned i = 0; i < fctx->nb_streams; i++)
@@ -88,9 +115,6 @@ void FF::resolve_codecs()
       actx = nullptr;
       throw std::runtime_error("Failed to open codec.\n");
    }
-
-   media_info.channels = actx->channels;
-   media_info.rate = actx->sample_rate;
 }
 
 const FF::Buffer& FF::decode()

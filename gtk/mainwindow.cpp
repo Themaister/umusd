@@ -3,7 +3,8 @@
 
 MainWindow::MainWindow() :
    play(Gtk::Stock::MEDIA_PLAY), stop(Gtk::Stock::MEDIA_STOP),
-   pause(Gtk::Stock::MEDIA_PAUSE), open(Gtk::Stock::OPEN)
+   pause(Gtk::Stock::MEDIA_PAUSE), open(Gtk::Stock::OPEN),
+   grid(3, 2)
 {
    set_title("uMusC");
    set_border_width(5);
@@ -26,12 +27,133 @@ MainWindow::MainWindow() :
 
    vbox.pack_start(hbox);
    vbox.pack_start(progress);
+   vbox.pack_start(grid);
+
+   grid.set_row_spacings(5);
+   grid.set_col_spacings(10);
+
+   auto label = Gtk::manage(new Gtk::Label);
+   label->set_markup("<b>Title</b>");
+   label->set_alignment(0, 0.5);
+   grid.attach(*label, 0, 1, 0, 1);
+   label = Gtk::manage(new Gtk::Label);
+   label->set_markup("<b>Artist</b>");
+   label->set_alignment(0, 0.5);
+   grid.attach(*label, 0, 1, 1, 2);
+   label = Gtk::manage(new Gtk::Label);
+   label->set_markup("<b>Album</b>");
+   label->set_alignment(0, 0.5);
+   grid.attach(*label, 0, 1, 2, 3);
+
+   meta.title.set_alignment(0, 0.5);
+   meta.artist.set_alignment(0, 0.5);
+   meta.album.set_alignment(0, 0.5);
+   grid.attach(meta.title,  1, 2, 0, 1);
+   grid.attach(meta.artist, 1, 2, 1, 2);
+   grid.attach(meta.album,  1, 2, 2, 3);
+   meta.title.set_text("N/A");
+   meta.artist.set_text("N/A");
+   meta.album.set_text("N/A");
 
    progress.set_fraction(0.0);
    progress.set_text("N/A");
 
    add(vbox);
    show_all();
+
+   Glib::signal_timeout().connect_seconds(sigc::mem_fun(*this, &MainWindow::on_timer_tick), 1); 
+   on_timer_tick();
+}
+
+bool MainWindow::on_timer_tick()
+{
+   try
+   {
+      Connection con;
+      update_meta(con);
+      update_pos(con);
+   }
+   catch(const std::exception &e)
+   {
+      std::cerr << e.what() << std::endl;
+      reset_meta_pos();
+   }
+
+   return true;
+}
+
+void MainWindow::reset_meta_pos()
+{
+   progress.set_text("N/A");
+   progress.set_fraction(0);
+   meta.title.set_text("");
+   meta.artist.set_text("");
+   meta.album.set_text("");
+}
+
+std::string MainWindow::sec_to_text(unsigned sec)
+{
+   std::string res;
+   unsigned hours = sec / 3600;
+   unsigned mins = (sec / 60) % 60;
+   sec %= 60;
+
+   if (hours)
+      res += stringify(hours, ":");
+
+   if (hours && mins < 10)
+      res += '0';
+   res += stringify(mins, ":");
+
+   if (sec < 10)
+      res += '0';
+   res += stringify(sec);
+   return res;
+}
+
+void MainWindow::update_pos(Connection &con)
+{
+   try
+   {
+      auto pos = con.command("POS\r\n");
+      auto list = string_split(pos, " ");
+      if (list.size() != 2)
+      {
+         progress.set_text("N/A");
+         progress.set_fraction(0);
+         return;
+      }
+
+      unsigned cur = std::strtoul(list[0].c_str(), nullptr, 0);
+      unsigned len = std::strtoul(list[1].c_str(), nullptr, 0);
+      if (cur > len || !len)
+         throw std::logic_error("Current position is larger than total length.\n");
+
+      progress.set_text(stringify(sec_to_text(cur), " / ", sec_to_text(len)));
+      progress.set_fraction(static_cast<float>(cur) / len);
+   }
+   catch(const std::exception &e)
+   {
+      progress.set_text("N/A");
+      progress.set_fraction(0);
+   }
+}
+
+void MainWindow::update_meta(Connection &con)
+{
+   try
+   {
+      meta.title.set_text(con.command("TITLE\r\n"));
+      meta.artist.set_text(con.command("ARTIST\r\n"));
+      meta.album.set_text(con.command("ALBUM\r\n"));
+   }
+   catch(const std::exception &e)
+   {
+      std::cerr << e.what() << std::endl;
+      meta.title.set_text("");
+      meta.artist.set_text("");
+      meta.album.set_text("");
+   }
 }
 
 void MainWindow::play_file()
@@ -42,6 +164,9 @@ void MainWindow::play_file()
       auto ret = con.command(stringify("PLAY \"", last_file, "\"\r\n"));
       if (ret != "OK")
          throw std::runtime_error(stringify("Connection: ", ret));
+
+      update_meta(con);
+      update_pos(con);
    }
    catch(const std::exception &e)
    {
@@ -79,26 +204,28 @@ void MainWindow::on_pause_clicked()
 
 void MainWindow::on_open_clicked()
 {
-   GtkFileChooserDialog *c_dia = GTK_FILE_CHOOSER_DIALOG(gtk_file_chooser_dialog_new("Open File ...",
-         GTK_WINDOW(gobj()), GTK_FILE_CHOOSER_ACTION_OPEN,
-         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-         GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT, nullptr));
+   Gtk::FileChooserDialog diag(*this, "Open File ...");
 
-   Gtk::FileChooserDialog *diag = Glib::wrap(c_dia);
+   diag.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+   diag.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_ACCEPT);
 
    Gtk::FileFilter filt;
    filt.set_name("Any file");
    filt.add_pattern("*");
-   diag->add_filter(filt);
+   diag.add_filter(filt);
 
-   if (diag->run() == Gtk::RESPONSE_ACCEPT)
+   if (diag.run() == Gtk::RESPONSE_ACCEPT)
    {
-      auto file = diag->get_filename();
-      std::cerr << "Path: " << file << std::endl;
+      std::string file;
+      try // This method sometimes throws awkward errors, but doesn't seem to be a problem. :x
+      {
+         file = diag.get_filename();
+      }
+      catch(...)
+      {}
+
       last_file = file;
       play_file();
    }
-
-   delete diag;
 }
 

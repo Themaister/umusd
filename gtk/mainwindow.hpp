@@ -13,13 +13,24 @@ class MainWindow : public Gtk::Window
       void on_stop_clicked();
       void on_pause_clicked();
       void on_open_clicked();
+      bool on_timer_tick();
 
       Gtk::VBox vbox;
       Gtk::ProgressBar progress;
 
-      Glib::ustring last_file;
+      std::string last_file;
+
+      Gtk::Table grid;
+      struct
+      {
+         Gtk::Label title, artist, album;
+      } meta;
 
       void play_file();
-};
+      void update_meta(Connection &con);
+      void update_pos(Connection &con);
+      void reset_meta_pos();
 
+      static std::string sec_to_text(unsigned sec);
+};
 

@@ -50,24 +50,27 @@ Connection::~Connection()
 std::string Connection::command(const std::string &cmd)
 {
    if (write(fd, cmd.data(), cmd.size()) < static_cast<ssize_t>(cmd.size()))
-      return "ERROR";
+      throw std::runtime_error("Failed to write to socket.\n");
 
    struct pollfd fds{};
    fds.events = POLLIN;
    fds.fd = fd;
 
    if (poll(&fds, 1, 1000) < 0)
-      return "ERROR";
+      throw std::runtime_error("Failed to poll socket.\n");
 
    if (!(fds.revents & POLLIN))
-      return "TIMEOUT";
+      throw std::runtime_error("Poll timed out.\n");
 
    char buf[1024];
    ssize_t ret = read(fd, buf, sizeof(buf));
 
    if (ret <= 0)
-      return "ERROR";
+      throw std::runtime_error("Failed to read reply.\n");
 
-   return {buf, buf + ret};
+   std::string str{buf, buf + ret};
+   str.erase(str.rfind("\r\n"));
+
+   return str;
 }
 

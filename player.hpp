@@ -2,6 +2,7 @@
 #define PLAYER_HPP__
 
 #include <memory>
+#include <utility>
 
 #include "oss.hpp"
 #include "alsa.hpp"
@@ -18,8 +19,10 @@ class Remote
       virtual void pause() = 0;
       virtual void unpause() = 0;
 
-      virtual float pos() const = 0;
+      virtual std::pair<float, float> pos() const = 0;
       virtual void seek(float pos) = 0;
+
+      virtual const FF::MediaInfo media_info() const = 0;
 };
 
 class Player : public Remote
@@ -32,8 +35,10 @@ class Player : public Remote
       void stop();
       void pause();
       void unpause();
-      float pos() const;
+      std::pair<float, float> pos() const;
       void seek(float pos);
+
+      virtual const FF::MediaInfo media_info() const;
 
    private:
       std::shared_ptr<TCPCommand> cmd;

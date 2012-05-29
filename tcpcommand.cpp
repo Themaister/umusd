@@ -131,7 +131,21 @@ inline std::string plain_action(Delegate func)
       func();
       return "OK";
    }
-   catch (const std::exception &e)
+   catch(const std::exception &e)
+   {
+      std::cerr << e.what() << std::endl;
+      return "ERROR";
+   }
+}
+
+template <class Delegate>
+inline std::string metadata_action(const Remote &remote, Delegate func)
+{
+   try
+   {
+      return func(remote.media_info());
+   }
+   catch(const std::exception &e)
    {
       std::cerr << e.what() << std::endl;
       return "ERROR";
@@ -183,8 +197,8 @@ void TCPSocket::init_command_map()
    command_map["POS"] = [this](EventHandler &, const std::string &arg) -> std::string {
       try
       {
-         float pos = remote->pos();
-         return stringify(static_cast<int>(pos));
+         auto pos = remote->pos();
+         return stringify(static_cast<int>(pos.first), " ", static_cast<int>(pos.second));
       }
       catch (const std::exception &e)
       {
@@ -196,6 +210,18 @@ void TCPSocket::init_command_map()
    command_map["DIE"] = [this](EventHandler &event, const std::string &) -> std::string {
       event.kill();
       return "OK";
+   };
+
+   command_map["TITLE"] = [this](EventHandler &, const std::string &) -> std::string {
+      return metadata_action(*remote, [](const FF::MediaInfo &info) { return info.title; });
+   };
+
+   command_map["ARTIST"] = [this](EventHandler &, const std::string &) -> std::string {
+      return metadata_action(*remote, [](const FF::MediaInfo &info) { return info.artist; });
+   };
+
+   command_map["ALBUM"] = [this](EventHandler &, const std::string &) -> std::string {
+      return metadata_action(*remote, [](const FF::MediaInfo &info) { return info.album; });
    };
 }
 

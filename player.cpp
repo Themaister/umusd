@@ -33,6 +33,14 @@ void Player::stop()
    ff.reset();
 }
 
+const FF::MediaInfo Player::media_info() const
+{
+   if (!ff)
+      throw std::logic_error("FFmpeg file not loaded.\n");
+
+   return ff->info();
+}
+
 void Player::pause()
 {
    if (!ff)
@@ -47,10 +55,7 @@ void Player::pause()
 
 void Player::unpause()
 {
-   if (!ff)
-      throw std::logic_error("FFmpeg file not loaded.\n");
-
-   auto info = ff->info();
+   auto info = media_info();
    if (!dev->active())
    {
       dev->init(info.channels, info.rate, dev->default_device());
@@ -58,12 +63,12 @@ void Player::unpause()
    }
 }
 
-float Player::pos() const
+std::pair<float, float> Player::pos() const
 {
    if (!ff)
       throw std::logic_error("FFmpeg file not loaded.\n");
 
-   return ff->pos();
+   return { ff->pos(), ff->info().duration };
 }
 
 void Player::seek(float pos)

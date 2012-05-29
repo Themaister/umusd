@@ -27,6 +27,10 @@ class FF
       {
          unsigned channels;
          unsigned rate;
+
+         float duration;
+
+         std::string title, artist, album;
       };
 
       const MediaInfo &info() const;
@@ -48,6 +52,8 @@ class FF
       Buffer buffer;
 
       void resolve_codecs();
+      void get_media_info();
+      void get_metadata(AVDictionary *meta);
 };
 
 #endif
