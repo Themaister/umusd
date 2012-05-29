@@ -23,6 +23,8 @@ class Remote
       virtual void seek(float pos) = 0;
 
       virtual const FF::MediaInfo media_info() const = 0;
+
+      virtual std::string status() const = 0;
 };
 
 class Player : public Remote
@@ -39,6 +41,7 @@ class Player : public Remote
       void seek(float pos);
 
       virtual const FF::MediaInfo media_info() const;
+      std::string status() const;
 
    private:
       std::shared_ptr<TCPCommand> cmd;

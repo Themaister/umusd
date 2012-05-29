@@ -148,7 +148,7 @@ inline std::string metadata_action(const Remote &remote, Delegate func)
    catch(const std::exception &e)
    {
       std::cerr << e.what() << std::endl;
-      return "ERROR";
+      return "";
    }
 }
 
@@ -222,6 +222,10 @@ void TCPSocket::init_command_map()
 
    command_map["ALBUM"] = [this](EventHandler &, const std::string &) -> std::string {
       return metadata_action(*remote, [](const FF::MediaInfo &info) { return info.album; });
+   };
+
+   command_map["STATUS"] = [this](EventHandler &, const std::string &) -> std::string {
+      return remote->status();
    };
 }
 

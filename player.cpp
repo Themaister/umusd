@@ -79,3 +79,13 @@ void Player::seek(float pos)
    ff->seek(pos);
 }
 
+std::string Player::status() const
+{
+   if (ff && dev->active())
+      return "PLAYING";
+   else if (ff && !dev->active())
+      return "PAUSED";
+   else
+      return "STOPPED";
+}
+
