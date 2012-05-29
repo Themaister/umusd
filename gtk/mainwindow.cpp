@@ -199,7 +199,19 @@ void MainWindow::on_stop_clicked()
 
 void MainWindow::on_pause_clicked()
 {
-   std::cerr << "Pause" << std::endl;
+   try
+   {
+      Connection con;
+      auto ret = con.command("STATUS\r\n");
+      if (ret == "PAUSED")
+         con.command("UNPAUSE\r\n");
+      else if (ret == "PLAYING")
+         con.command("PAUSE\r\n");
+   }
+   catch(const std::exception &e)
+   {
+      std::cerr << e.what() << std::endl;
+   }
 }
 
 void MainWindow::on_open_clicked()
