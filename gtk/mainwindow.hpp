@@ -19,6 +19,7 @@ class MainWindow : public Gtk::Window
       void on_about();
 
       Gtk::MenuBar menu;
+      Gtk::VBox main_box;
       Gtk::VBox vbox;
       Gtk::ProgressBar progress;
 

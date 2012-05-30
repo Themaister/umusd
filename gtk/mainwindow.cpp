@@ -9,7 +9,6 @@ MainWindow::MainWindow() :
    spawn();
    set_title("uMusC");
    set_icon_from_file("/usr/share/icons/umusc.png");
-   set_border_width(5);
 
    play.signal_clicked().connect(
          sigc::mem_fun(*this, &MainWindow::on_play_clicked));
@@ -21,6 +20,7 @@ MainWindow::MainWindow() :
          sigc::mem_fun(*this, &MainWindow::on_open_clicked));
 
    vbox.set_spacing(3);
+   vbox.set_border_width(5);
    hbox.pack_start(open);
    hbox.pack_start(*Gtk::manage(new Gtk::VSeparator));
    hbox.pack_start(play);
@@ -28,7 +28,6 @@ MainWindow::MainWindow() :
    hbox.pack_start(stop);
 
    init_menu();
-   vbox.pack_start(menu);
    vbox.pack_start(hbox);
    vbox.pack_start(progress);
    vbox.pack_start(grid);
@@ -75,7 +74,9 @@ MainWindow::MainWindow() :
    add_filter("WAV files", {"*.wav"});
    add_filter("Any file", {"*"});
 
-   add(vbox);
+   main_box.pack_start(menu);
+   main_box.pack_start(vbox);
+   add(main_box);
    show_all();
 
    Glib::signal_timeout().connect_seconds(sigc::mem_fun(*this, &MainWindow::on_timer_tick), 1); 
@@ -103,7 +104,8 @@ void MainWindow::spawn()
 void MainWindow::init_menu()
 {
    auto men = managed<Gtk::Menu>();
-   auto item = managed<Gtk::MenuItem>("File");
+   auto item = managed<Gtk::MenuItem>("_File");
+   item->set_use_underline();
    item->set_submenu(*men);
    menu.append(*item);
    item->show();
@@ -114,7 +116,8 @@ void MainWindow::init_menu()
    action->show();
 
    men = managed<Gtk::Menu>();
-   item = managed<Gtk::MenuItem>("Help");
+   item = managed<Gtk::MenuItem>("_Help");
+   item->set_use_underline();
    item->set_submenu(*men);
    menu.append(*item);
    item->show();
@@ -130,7 +133,8 @@ void MainWindow::on_about()
    Gtk::MessageDialog diag(*this,
          "<b>uMusC</b>\n\n"
          "Small GTK+ frontend for uMusD\n"
-         "Copyright (C) 2012 - Hans-Kristian Arntzen", true);
+         "<small>Copyright &#169; 2012 - Hans-Kristian Arntzen</small>", true);
+
    Gtk::Image img("/usr/share/icons/umusc.png");
    diag.set_image(img);
    img.show();
