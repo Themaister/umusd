@@ -28,8 +28,8 @@ MainWindow::MainWindow() :
    hbox.pack_start(stop);
 
    init_menu();
-   vbox.pack_start(hbox);
-   vbox.pack_start(progress);
+   vbox.pack_start(hbox, Gtk::PACK_SHRINK);
+   vbox.pack_start(progress, Gtk::PACK_SHRINK);
    vbox.pack_start(grid);
 
    grid.set_row_spacings(5);
@@ -74,7 +74,7 @@ MainWindow::MainWindow() :
    add_filter("WAV files", {"*.wav"});
    add_filter("Any file", {"*"});
 
-   main_box.pack_start(menu);
+   main_box.pack_start(menu, Gtk::PACK_SHRINK);
    main_box.pack_start(vbox);
    add(main_box);
    show_all();
