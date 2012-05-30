@@ -16,7 +16,9 @@ class MainWindow : public Gtk::Window
       void on_open_clicked();
       bool on_timer_tick();
       bool on_button_press(GdkEventButton *btn);
+      void on_about();
 
+      Gtk::MenuBar menu;
       Gtk::VBox vbox;
       Gtk::ProgressBar progress;
 
@@ -30,6 +32,9 @@ class MainWindow : public Gtk::Window
 
       Gtk::FileChooserDialog diag;
       void add_filter(const std::string &name, const std::list<std::string> &ext);
+
+      void spawn();
+      void init_menu();
 
       void play_file();
       void update_meta(Connection &con);

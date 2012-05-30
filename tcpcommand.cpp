@@ -231,7 +231,8 @@ void TCPSocket::init_command_map()
 
 void TCPSocket::parse_command(EventHandler &event, const std::string &cmd)
 {
-   std::cerr << "Command: " << cmd << std::endl;
+   //std::cerr << "Command: " << cmd << std::endl;
+
    auto split = cmd.find(' ');
    auto first_arg = cmd.find('\"', split);
    auto last_arg = cmd.rfind('\"');

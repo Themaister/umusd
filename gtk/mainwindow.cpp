@@ -6,7 +6,9 @@ MainWindow::MainWindow() :
    pause(Gtk::Stock::MEDIA_PAUSE), open(Gtk::Stock::OPEN),
    grid(3, 2), diag(*this, "Open File ...")
 {
+   spawn();
    set_title("uMusC");
+   set_icon_from_file("/usr/share/icons/umusc.png");
    set_border_width(5);
 
    play.signal_clicked().connect(
@@ -25,6 +27,8 @@ MainWindow::MainWindow() :
    hbox.pack_start(pause);
    hbox.pack_start(stop);
 
+   init_menu();
+   vbox.pack_start(menu);
    vbox.pack_start(hbox);
    vbox.pack_start(progress);
    vbox.pack_start(grid);
@@ -76,6 +80,61 @@ MainWindow::MainWindow() :
 
    Glib::signal_timeout().connect_seconds(sigc::mem_fun(*this, &MainWindow::on_timer_tick), 1); 
    on_timer_tick();
+}
+
+template <class T, class... A>
+inline T* managed(A&&... args)
+{
+   return Gtk::manage(new T(std::forward<A>(args)...));
+}
+
+void MainWindow::spawn()
+{
+   try
+   {
+      Glib::spawn_command_line_async("umusd");
+   }
+   catch(const std::exception &e)
+   {
+      std::cerr << e.what() << std::endl;
+   }
+}
+
+void MainWindow::init_menu()
+{
+   auto men = managed<Gtk::Menu>();
+   auto item = managed<Gtk::MenuItem>("File");
+   item->set_submenu(*men);
+   menu.append(*item);
+   item->show();
+
+   auto action = managed<Gtk::MenuItem>("Quit");
+   men->append(*action);
+   action->signal_activate().connect(sigc::ptr_fun(Gtk::Main::quit));
+   action->show();
+
+   men = managed<Gtk::Menu>();
+   item = managed<Gtk::MenuItem>("Help");
+   item->set_submenu(*men);
+   menu.append(*item);
+   item->show();
+
+   action = managed<Gtk::MenuItem>("About");
+   men->append(*action);
+   action->signal_activate().connect(sigc::mem_fun(*this, &MainWindow::on_about));
+   action->show();
+}
+
+void MainWindow::on_about()
+{
+   Gtk::MessageDialog diag(*this,
+         "<b>uMusC</b>\n\n"
+         "Small GTK+ frontend for uMusD\n"
+         "Copyright (C) 2012 - Hans-Kristian Arntzen", true);
+   Gtk::Image img("/usr/share/icons/umusc.png");
+   diag.set_image(img);
+   img.show();
+   diag.run();
 }
 
 bool MainWindow::on_button_press(GdkEventButton *btn)

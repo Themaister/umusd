@@ -21,7 +21,7 @@ clean:
 	rm -f $(TARGET)
 	rm -f $(OBJECTS)
 
-install:
+install: all
 	install -m755 $(TARGET) $(PREFIX)/bin
 
 .PHONY: clean

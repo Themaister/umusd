@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=uMusC
+Categories=Music
+GenericName=Simple GTK+ frontend for uMusD
+Exec=umusc
+Icon=/usr/share/icons/umusc.png
+StartupNotify=false
+Name[en_US]=uMusC
