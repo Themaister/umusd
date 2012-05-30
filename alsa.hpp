@@ -16,7 +16,7 @@ class ALSA : public Audio
       void write(const FF::Buffer &buf);
       void stop();
 
-      void handle(EventHandler &handler) override;
+      void handle(EventHandler &handler);
 
       bool active() const;
 

@@ -22,9 +22,9 @@ class TCPSocket : public EventHandled
       TCPSocket(TCPSocket &&tcp);
 
       bool dead() const;
-      EventHandled::PollList pollfds() const override;
-      void handle(EventHandler &handler) override;
-      void set_remote(Remote &remote) override;
+      EventHandled::PollList pollfds() const;
+      void handle(EventHandler &handler);
+      void set_remote(Remote &remote);
 
    private:
       int fd;
@@ -56,10 +56,10 @@ class TCPCommand : public EventHandled
       TCPCommand& operator=(TCPCommand &&tcp);
       TCPCommand(TCPCommand &&tcp);
 
-      EventHandled::PollList pollfds() const override;
-      void handle(EventHandler &handler) override;
+      EventHandled::PollList pollfds() const;
+      void handle(EventHandler &handler);
 
-      void set_remote(Remote &remote) override;
+      void set_remote(Remote &remote);
 
    private:
       int fd;
