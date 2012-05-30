@@ -54,10 +54,7 @@ FF& FF::operator=(FF &&ff)
    }
 
    if (fctx)
-   {
       avformat_close_input(&fctx);
-      fctx = nullptr;
-   }
 
    std::swap(fctx, ff.fctx);
    std::swap(actx, ff.actx);
