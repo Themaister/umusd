@@ -11,6 +11,8 @@ FF::FF(const std::string &path)
 
    try
    {
+      media_info.title = path;
+
       if (avformat_open_input(&fctx, path.c_str(), nullptr, nullptr) < 0)
          throw std::runtime_error("Failed to open file.\n");
 
