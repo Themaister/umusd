@@ -2,6 +2,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <algorithm>
+#include <iostream>
 
 FF::FF(const std::string &path)
    : fctx(nullptr), actx(nullptr), aud_stream(-1), last_pos(0.0f)
@@ -123,11 +124,15 @@ const FF::Buffer& FF::decode()
    AVPacket pkt;
    AVFrame frame;
    int got_ptr = 0;
+   unsigned retry_cnt = 0;
 
    while (!got_ptr)
    {
       if (av_read_frame(fctx, &pkt) < 0)
+      {
+         std::cerr << "av_read_frame() failed." << std::endl;
          return buffer;
+      }
 
       if (pkt.stream_index != aud_stream)
       {
@@ -137,7 +142,12 @@ const FF::Buffer& FF::decode()
 
       if (avcodec_decode_audio4(actx, &frame, &got_ptr, &pkt) < 0)
       {
+         std::cerr << "avcodec_decode_audio4() failed." << std::endl;
          av_free_packet(&pkt);
+
+         if (retry_cnt++ < 4)
+            continue;
+
          return buffer;
       }
 
