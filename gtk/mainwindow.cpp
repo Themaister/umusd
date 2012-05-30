@@ -264,7 +264,9 @@ void MainWindow::update_meta(Connection &con)
 {
    try
    {
-      meta.title.set_text(con.command("TITLE\r\n"));
+      auto title = con.command("TITLE\r\n");
+      set_title(stringify("uMusC - ", title));
+      meta.title.set_text(title);
       meta.artist.set_text(con.command("ARTIST\r\n"));
       meta.album.set_text(con.command("ALBUM\r\n"));
    }
