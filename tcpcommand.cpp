@@ -159,21 +159,19 @@ void TCPSocket::init_command_map()
    };
 
    command_map["PLAY"] = [this](EventHandler &, const std::string &arg) -> std::string {
-      try
-      {
-         if (remote)
-         {
-            remote->play(arg);
-            return "OK";
-         }
-         else
-            return "NYET";
-      }
-      catch (const std::exception &e)
-      {
-         std::cerr << e.what() << std::endl;
-         return "ERROR";
-      }
+      return plain_action(std::bind(&Remote::play, remote, arg));
+   };
+
+   command_map["QUEUE"] = [this](EventHandler &, const std::string &arg) -> std::string {
+      return plain_action(std::bind(&Remote::add, remote, arg));
+   };
+
+   command_map["NEXT"] = [this](EventHandler &, const std::string &) -> std::string {
+      return plain_action(std::bind(&Remote::next, remote));
+   };
+
+   command_map["PREV"] = [this](EventHandler &, const std::string &) -> std::string {
+      return plain_action(std::bind(&Remote::prev, remote));
    };
 
    command_map["STOP"] = [this](EventHandler &, const std::string &) -> std::string {

@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <utility>
+#include <deque>
 
 #include "oss.hpp"
 #include "alsa.hpp"
@@ -14,7 +15,10 @@ class Remote
 {
    public:
       virtual void play(const std::string &path) = 0;
+      virtual void add(const std::string &path) = 0;
       virtual void stop() = 0;
+      virtual void prev() = 0;
+      virtual void next() = 0;
 
       virtual void pause() = 0;
       virtual void unpause() = 0;
@@ -34,7 +38,10 @@ class Player : public Remote
       void run();
 
       void play(const std::string &path);
+      void add(const std::string &path);
       void stop();
+      void next();
+      void prev();
       void pause();
       void unpause();
       std::pair<float, float> pos() const;
@@ -48,6 +55,12 @@ class Player : public Remote
       std::unique_ptr<EventHandler> event;
       std::shared_ptr<Audio> dev;
       std::shared_ptr<FF> ff;
+
+      struct
+      {
+         std::string current;
+         std::deque<std::string> prev, next;
+      } queue;
 };
 
 #endif

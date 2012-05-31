@@ -15,6 +15,8 @@ class Audio : public EventHandled
       virtual std::string default_device() const = 0;
 
       void set_media(std::weak_ptr<FF> ff);
+
+      void set_remote(Remote &remote);
       virtual void handle(EventHandler &handler);
 
       virtual void init(unsigned channels, unsigned rate, const std::string &dev) = 0;
@@ -25,6 +27,7 @@ class Audio : public EventHandled
 
    protected:
       std::weak_ptr<FF> ff;
+      Remote *remote;
 };
 
 #endif

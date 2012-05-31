@@ -1,5 +1,6 @@
 #include "player.hpp"
 #include <stdexcept>
+#include <iostream>
 
 Player::Player()
 {
@@ -8,6 +9,8 @@ Player::Player()
 
    event = std::unique_ptr<EventHandler>(new EventHandler);
    dev = std::shared_ptr<Audio>(new ALSA);
+   dev->set_remote(*this);
+
    event->add(cmd);
 }
 
@@ -18,12 +21,44 @@ void Player::run()
 
 void Player::play(const std::string& path)
 {
-   ff = std::make_shared<FF>(path);
+   if (!path.empty())
+   {
+      if (!queue.current.empty())
+         queue.prev.push_back(std::move(queue.current));
+
+      queue.current = path;
+   }
+
+   if (queue.current.empty())
+   {
+      if (queue.next.empty())
+         throw std::logic_error("No files to play in queue ...\n");
+
+      queue.current = std::move(queue.next.front());
+      queue.next.pop_front();
+   }
+
+   ff = std::make_shared<FF>(queue.current);
    dev->set_media(ff);
 
    auto info = ff->info();
    dev->init(info.channels, info.rate, dev->default_device());
    event->add(dev);
+}
+
+void Player::add(const std::string& path)
+{
+   if (path.empty())
+   {
+      std::cerr << "Clearing queue ..." << std::endl;
+      queue.prev.clear();
+      queue.next.clear();
+   }
+   else
+   {
+      std::cerr << "Queueing up: " << path << std::endl;
+      queue.next.push_back(path);
+   }
 }
 
 void Player::stop()
@@ -33,10 +68,35 @@ void Player::stop()
    ff.reset();
 }
 
+void Player::prev()
+{
+   stop();
+
+   if (queue.prev.empty())
+      throw std::logic_error("No files in prev queue.");
+
+   queue.current.clear();
+   auto new_song = std::move(queue.prev.back());
+   queue.prev.pop_back();
+   play(new_song);
+}
+
+void Player::next()
+{
+   stop();
+
+   if (queue.next.empty())
+      throw std::logic_error("No files in next queue.");
+
+   auto new_path = std::move(queue.next.front());
+   queue.next.pop_front();
+   play(new_path);
+}
+
 const FF::MediaInfo Player::media_info() const
 {
    if (!ff)
-      throw std::logic_error("FFmpeg file not loaded.\n");
+      throw std::logic_error("FFmpeg file not loaded.");
 
    return ff->info();
 }
