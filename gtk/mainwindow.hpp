@@ -9,11 +9,13 @@ class MainWindow : public Gtk::Window
       
    private:
       Gtk::HBox hbox;
-      Gtk::Button play, stop, pause, open;
+      Gtk::Button play, stop, pause, open, next, prev;
       void on_play_clicked();
       void on_stop_clicked();
       void on_pause_clicked();
       void on_open_clicked();
+      void on_next_clicked();
+      void on_prev_clicked();
       bool on_timer_tick();
       bool on_button_press(GdkEventButton *btn);
       void on_about();
@@ -22,8 +24,6 @@ class MainWindow : public Gtk::Window
       Gtk::VBox main_box;
       Gtk::VBox vbox;
       Gtk::ProgressBar progress;
-
-      std::string last_file;
 
       Gtk::Table grid;
       struct
@@ -37,7 +37,9 @@ class MainWindow : public Gtk::Window
       void spawn();
       void init_menu();
 
-      void play_file();
+      void play_add(const std::string &cmd, const std::string &path);
+      void play_file(const std::string &path = "");
+      void queue_file(const std::string &path);
       void update_meta(Connection &con);
       void update_pos(Connection &con);
       void reset_meta_pos();

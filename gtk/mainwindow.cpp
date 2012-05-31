@@ -4,6 +4,7 @@
 MainWindow::MainWindow() :
    play(Gtk::Stock::MEDIA_PLAY), stop(Gtk::Stock::MEDIA_STOP),
    pause(Gtk::Stock::MEDIA_PAUSE), open(Gtk::Stock::OPEN),
+   next(Gtk::Stock::MEDIA_NEXT), prev(Gtk::Stock::MEDIA_PREVIOUS),
    grid(3, 2), diag(*this, "Open File ...")
 {
    spawn();
@@ -18,6 +19,10 @@ MainWindow::MainWindow() :
          sigc::mem_fun(*this, &MainWindow::on_pause_clicked));
    open.signal_clicked().connect(
          sigc::mem_fun(*this, &MainWindow::on_open_clicked));
+   next.signal_clicked().connect(
+         sigc::mem_fun(*this, &MainWindow::on_next_clicked));
+   prev.signal_clicked().connect(
+         sigc::mem_fun(*this, &MainWindow::on_prev_clicked));
 
    vbox.set_spacing(3);
    vbox.set_border_width(5);
@@ -26,6 +31,8 @@ MainWindow::MainWindow() :
    hbox.pack_start(play);
    hbox.pack_start(pause);
    hbox.pack_start(stop);
+   hbox.pack_start(prev);
+   hbox.pack_start(next);
 
    init_menu();
    vbox.pack_start(hbox, Gtk::PACK_SHRINK);
@@ -65,6 +72,7 @@ MainWindow::MainWindow() :
 
    diag.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
    diag.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_ACCEPT);
+   diag.set_select_multiple();
 
    add_filter("Media files", {"*.mp3", "*.flac", "*.ogg", "*.m4a", "*.wav"});
    add_filter("MP3 files", {"*.mp3"});
@@ -248,7 +256,7 @@ void MainWindow::update_pos(Connection &con)
       unsigned cur = std::strtoul(list[0].c_str(), nullptr, 0);
       unsigned len = std::strtoul(list[1].c_str(), nullptr, 0);
       if (cur > len || !len)
-         throw std::logic_error("Current position is larger than total length.\n");
+         throw std::logic_error("Current position is larger than total length.");
 
       progress.set_text(stringify(sec_to_text(cur), " / ", sec_to_text(len)));
       progress.set_fraction(static_cast<float>(cur) / len);
@@ -265,7 +273,10 @@ void MainWindow::update_meta(Connection &con)
    try
    {
       auto title = con.command("TITLE\r\n");
-      set_title(stringify("uMusC - ", title));
+      if (title.empty())
+         set_title("uMusC");
+      else
+         set_title(stringify("uMusC - ", title));
       meta.title.set_text(title);
       meta.artist.set_text(con.command("ARTIST\r\n"));
       meta.album.set_text(con.command("ALBUM\r\n"));
@@ -279,12 +290,18 @@ void MainWindow::update_meta(Connection &con)
    }
 }
 
-void MainWindow::play_file()
+void MainWindow::play_add(const std::string &cmd, const std::string &path)
 {
    try
    {
       Connection con;
-      auto ret = con.command(stringify("PLAY \"", last_file, "\"\r\n"));
+
+      std::string ret;
+      if (path.empty())
+         ret = con.command(stringify(cmd, "\r\n"));
+      else
+         ret = con.command(stringify(cmd, " \"", path, "\"\r\n"));
+
       if (ret != "OK")
          throw std::runtime_error(stringify("Connection: ", ret));
 
@@ -297,12 +314,19 @@ void MainWindow::play_file()
    }
 }
 
+void MainWindow::play_file(const std::string &path)
+{
+   play_add("PLAY", path);
+}
+
+void MainWindow::queue_file(const std::string &path)
+{
+   play_add("QUEUE", path);
+}
+
 void MainWindow::on_play_clicked()
 {
-   if (last_file.empty())
-      return on_open_clicked();
-   else
-      play_file();
+   play_file();
 }
 
 void MainWindow::on_stop_clicked()
@@ -337,20 +361,54 @@ void MainWindow::on_pause_clicked()
    }
 }
 
+void MainWindow::on_next_clicked()
+{
+   try
+   {
+      Connection con;
+      con.command("NEXT\r\n");
+   }
+   catch(const std::exception &e)
+   {
+      std::cerr << e.what() << std::endl;
+   }
+}
+
+void MainWindow::on_prev_clicked()
+{
+   try
+   {
+      Connection con;
+      con.command("PREV\r\n");
+   }
+   catch(const std::exception &e)
+   {
+      std::cerr << e.what() << std::endl;
+   }
+}
+
 void MainWindow::on_open_clicked()
 {
    if (diag.run() == Gtk::RESPONSE_ACCEPT)
    {
-      std::string file;
-      try // This method sometimes throws awkward errors, but doesn't seem to be a problem. :x
+      std::vector<std::string> files;
+
+      // This method sometimes throws awkward errors,
+      // but doesn't seem to be a problem. :x
+      try
       {
-         file = diag.get_filename();
+         files = diag.get_filenames();
       }
       catch(...)
       {}
 
-      last_file = file;
-      play_file();
+      if (!files.empty())
+      {
+         play_file(files[0]);
+         files.erase(files.begin());
+         for (auto &file : files)
+            queue_file(file);
+      }
    }
 
    diag.hide();

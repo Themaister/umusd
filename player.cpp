@@ -19,12 +19,16 @@ void Player::run()
    while (event->wait());
 }
 
-void Player::play(const std::string& path)
+void Player::play_media(const std::string &path)
 {
    if (!path.empty())
    {
       if (!queue.current.empty())
+      {
          queue.prev.push_back(std::move(queue.current));
+         if (queue.prev.size() > 4096)
+            queue.prev.erase(queue.prev.begin() + queue.prev.size() - 4096, queue.prev.end());
+      }
 
       queue.current = path;
    }
@@ -40,10 +44,19 @@ void Player::play(const std::string& path)
 
    ff = std::make_shared<FF>(queue.current);
    dev->set_media(ff);
+}
 
+void Player::play_audio()
+{
    auto info = ff->info();
    dev->init(info.channels, info.rate, dev->default_device());
    event->add(dev);
+}
+
+void Player::play(const std::string& path)
+{
+   play_media(path);
+   play_audio();
 }
 
 void Player::add(const std::string& path)
@@ -83,14 +96,23 @@ void Player::prev()
 
 void Player::next()
 {
-   stop();
+   FF::MediaInfo old_info;
+   if (ff)
+      old_info = ff->info();
 
    if (queue.next.empty())
       throw std::logic_error("No files in next queue.");
 
    auto new_path = std::move(queue.next.front());
    queue.next.pop_front();
-   play(new_path);
+   play_media(new_path);
+
+   auto &new_info = ff->info();
+   if (old_info.channels != new_info.channels || old_info.rate != new_info.rate)
+   {
+      stop();
+      play_audio();
+   }
 }
 
 const FF::MediaInfo Player::media_info() const

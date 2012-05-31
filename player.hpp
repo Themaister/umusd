@@ -56,6 +56,9 @@ class Player : public Remote
       std::shared_ptr<Audio> dev;
       std::shared_ptr<FF> ff;
 
+      void play_media(const std::string &path);
+      void play_audio();
+
       struct
       {
          std::string current;
