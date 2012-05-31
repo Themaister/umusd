@@ -42,7 +42,7 @@ TCPCommand::TCPCommand(std::uint16_t port) : remote(nullptr)
    if (bind(fd, servinfo->ai_addr, servinfo->ai_addrlen) < 0)
    {
       close(fd);
-      throw std::runtime_error("Failed to bind socket.\n");
+      throw std::runtime_error("Failed to bind socket. umusd is probably already running.\n");
    }
 
    if (listen(fd, 10) < 0)
