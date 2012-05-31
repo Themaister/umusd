@@ -37,6 +37,7 @@ class MainWindow : public Gtk::Window
       void spawn();
       void init_menu();
 
+      void play_ctl(const std::string &cmd);
       void play_add(const std::string &cmd, const std::string &path);
       void play_file(const std::string &path = "");
       void queue_file(const std::string &path);

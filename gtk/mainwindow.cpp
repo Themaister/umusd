@@ -361,12 +361,14 @@ void MainWindow::on_pause_clicked()
    }
 }
 
-void MainWindow::on_next_clicked()
+void MainWindow::play_ctl(const std::string &cmd)
 {
    try
    {
       Connection con;
-      con.command("NEXT\r\n");
+      con.command(stringify(cmd, "\r\n"));
+      update_meta(con);
+      update_pos(con);
    }
    catch(const std::exception &e)
    {
@@ -374,17 +376,14 @@ void MainWindow::on_next_clicked()
    }
 }
 
+void MainWindow::on_next_clicked()
+{
+   play_ctl("NEXT");
+}
+
 void MainWindow::on_prev_clicked()
 {
-   try
-   {
-      Connection con;
-      con.command("PREV\r\n");
-   }
-   catch(const std::exception &e)
-   {
-      std::cerr << e.what() << std::endl;
-   }
+   play_ctl("PREV");
 }
 
 void MainWindow::on_open_clicked()
@@ -406,6 +405,7 @@ void MainWindow::on_open_clicked()
       {
          play_file(files[0]);
          files.erase(files.begin());
+         queue_file("");
          for (auto &file : files)
             queue_file(file);
       }
