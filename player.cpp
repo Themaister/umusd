@@ -112,7 +112,7 @@ void Player::next()
    auto &new_info = ff->info();
 
    // Attempt gapless
-   if (old_info.channels != new_info.channels || old_info.rate != new_info.rate)
+   if (old_info.channels != new_info.channels || old_info.rate != new_info.rate || !ff)
    {
       stop();
       play_audio();
