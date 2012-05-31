@@ -83,12 +83,14 @@ void Player::stop()
 
 void Player::prev()
 {
-   stop();
-
    if (queue.prev.empty())
       throw std::logic_error("No files in prev queue.");
 
-   queue.current.clear();
+   stop();
+
+   if (!queue.current.empty())
+      queue.next.push_front(std::move(queue.current));
+
    auto new_song = std::move(queue.prev.back());
    queue.prev.pop_back();
    play(new_song);
@@ -108,6 +110,8 @@ void Player::next()
    play_media(new_path);
 
    auto &new_info = ff->info();
+
+   // Attempt gapless
    if (old_info.channels != new_info.channels || old_info.rate != new_info.rate)
    {
       stop();
