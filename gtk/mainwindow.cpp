@@ -1,15 +1,25 @@
 #include "mainwindow.hpp"
 #include <iostream>
 
+template <class T, class... A>
+inline T* managed(A&&... args)
+{
+   return Gtk::manage(new T(std::forward<A>(args)...));
+}
+
 MainWindow::MainWindow() :
-   play(Gtk::Stock::MEDIA_PLAY), stop(Gtk::Stock::MEDIA_STOP),
-   pause(Gtk::Stock::MEDIA_PAUSE), open(Gtk::Stock::OPEN),
-   next(Gtk::Stock::MEDIA_NEXT), prev(Gtk::Stock::MEDIA_PREVIOUS),
    grid(3, 2), diag(*this, "Open File ...")
 {
    spawn();
    set_title("uMusC");
    set_icon_from_file("/usr/share/icons/umusc.png");
+
+   play.set_image(*managed<Gtk::Image>(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON));
+   stop.set_image(*managed<Gtk::Image>(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON));
+   pause.set_image(*managed<Gtk::Image>(Gtk::Stock::MEDIA_PAUSE, Gtk::ICON_SIZE_BUTTON));
+   open.set_image(*managed<Gtk::Image>(Gtk::Stock::OPEN, Gtk::ICON_SIZE_BUTTON));
+   next.set_image(*managed<Gtk::Image>(Gtk::Stock::MEDIA_NEXT, Gtk::ICON_SIZE_BUTTON));
+   prev.set_image(*managed<Gtk::Image>(Gtk::Stock::MEDIA_PREVIOUS, Gtk::ICON_SIZE_BUTTON));
 
    play.signal_clicked().connect(
          sigc::mem_fun(*this, &MainWindow::on_play_clicked));
@@ -27,11 +37,11 @@ MainWindow::MainWindow() :
    vbox.set_spacing(3);
    vbox.set_border_width(5);
    hbox.pack_start(open);
-   hbox.pack_start(*Gtk::manage(new Gtk::VSeparator));
+   hbox.pack_start(*managed<Gtk::VSeparator>());
+   hbox.pack_start(prev);
    hbox.pack_start(play);
    hbox.pack_start(pause);
    hbox.pack_start(stop);
-   hbox.pack_start(prev);
    hbox.pack_start(next);
 
    init_menu();
@@ -89,12 +99,6 @@ MainWindow::MainWindow() :
 
    Glib::signal_timeout().connect_seconds(sigc::mem_fun(*this, &MainWindow::on_timer_tick), 1); 
    on_timer_tick();
-}
-
-template <class T, class... A>
-inline T* managed(A&&... args)
-{
-   return Gtk::manage(new T(std::forward<A>(args)...));
 }
 
 void MainWindow::spawn()
