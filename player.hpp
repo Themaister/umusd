@@ -3,18 +3,18 @@
 
 #include <memory>
 #include <utility>
-#include <deque>
 
 #include "oss.hpp"
 #include "alsa.hpp"
 #include "ffmpeg.hpp"
 #include "tcpcommand.hpp"
 #include "eventhandler.hpp"
+#include "queue.hpp"
 
 class Remote
 {
    public:
-      virtual void play(const std::string &path) = 0;
+      virtual void play(const std::string &path = "") = 0;
       virtual void add(const std::string &path) = 0;
       virtual void stop() = 0;
       virtual void prev() = 0;
@@ -37,7 +37,7 @@ class Player : public Remote
       Player();
       void run();
 
-      void play(const std::string &path);
+      void play(const std::string &path = "");
       void add(const std::string &path);
       void stop();
       void next();
@@ -55,15 +55,10 @@ class Player : public Remote
       std::unique_ptr<EventHandler> event;
       std::shared_ptr<Audio> dev;
       std::shared_ptr<FF> ff;
+      PlayQueue queue;
 
-      void play_media(const std::string &path);
+      void play_media(const std::string &path = "");
       void play_audio();
-
-      struct
-      {
-         std::string current;
-         std::deque<std::string> prev, next;
-      } queue;
 };
 
 #endif

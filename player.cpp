@@ -22,27 +22,9 @@ void Player::run()
 void Player::play_media(const std::string &path)
 {
    if (!path.empty())
-   {
-      if (!queue.current.empty())
-      {
-         queue.prev.push_back(std::move(queue.current));
-         if (queue.prev.size() > 4096)
-            queue.prev.erase(queue.prev.begin() + queue.prev.size() - 4096, queue.prev.end());
-      }
+      queue.current(path);
 
-      queue.current = path;
-   }
-
-   if (queue.current.empty())
-   {
-      if (queue.next.empty())
-         throw std::logic_error("No files to play in queue ...\n");
-
-      queue.current = std::move(queue.next.front());
-      queue.next.pop_front();
-   }
-
-   ff = std::make_shared<FF>(queue.current);
+   ff = std::make_shared<FF>(queue.current());
    dev->set_media(ff);
 }
 
@@ -62,16 +44,9 @@ void Player::play(const std::string& path)
 void Player::add(const std::string& path)
 {
    if (path.empty())
-   {
-      std::cerr << "Clearing queue ..." << std::endl;
-      queue.prev.clear();
-      queue.next.clear();
-   }
+      queue.clear();
    else
-   {
-      std::cerr << "Queueing up: " << path << std::endl;
-      queue.next.push_back(path);
-   }
+      queue.add(path);
 }
 
 void Player::stop()
@@ -83,31 +58,20 @@ void Player::stop()
 
 void Player::prev()
 {
-   if (queue.prev.empty())
-      throw std::logic_error("No files in prev queue.");
+   queue.prev();
 
    stop();
-
-   if (!queue.current.empty())
-      queue.next.push_front(std::move(queue.current));
-
-   auto new_song = std::move(queue.prev.back());
-   queue.prev.pop_back();
-   play(new_song);
+   play();
 }
 
 void Player::next()
 {
-   FF::MediaInfo old_info;
+   FF::MediaInfo old_info{};
    if (ff)
       old_info = ff->info();
 
-   if (queue.next.empty())
-      throw std::logic_error("No files in next queue.");
-
-   auto new_path = std::move(queue.next.front());
-   queue.next.pop_front();
-   play_media(new_path);
+   queue.next();
+   play_media();
 
    auto &new_info = ff->info();
 
