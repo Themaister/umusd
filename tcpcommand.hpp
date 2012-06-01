@@ -5,11 +5,12 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <memory>
 #include "command.hpp"
 
 class EventHandler;
 
-class TCPSocket : public Command
+class TCPSocket : public Command, public std::enable_shared_from_this<TCPSocket>
 {
    public:
       explicit TCPSocket(int fd);
@@ -34,7 +35,9 @@ class TCPSocket : public Command
       void flush_buffer();
       void parse_commands(EventHandler &handler);
 
-      void write_all(const char *data, std::size_t size);
+      void write_all(EventHandler &handler, std::string &&str);
+
+      std::shared_ptr<SocketReply> reply;
 };
 
 class TCPCommand : public EventHandled

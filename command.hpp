@@ -6,6 +6,7 @@
 #include <map>
 #include <functional>
 #include <vector>
+#include <cstddef>
 
 class EventHandler;
 class Remote;
@@ -25,6 +26,25 @@ class Command : public EventHandled
 
       std::map<std::string,
          std::function<std::string (EventHandler &, std::vector<std::string>)>> command_map;
+};
+
+class SocketReply : public EventHandled
+{
+   public:
+      SocketReply(int fd,
+            std::string &&data, std::function<void (bool)> end_cb);
+
+      void operator=(const SocketReply &) = delete;
+
+      void handle(EventHandler &handler);
+      EventHandled::PollList pollfds() const;
+
+   private:
+      int fd;
+
+      std::string data;
+      std::size_t ptr;
+      std::function<void (bool)> end_cb;
 };
 
 #endif

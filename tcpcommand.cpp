@@ -99,11 +99,7 @@ TCPCommand::TCPCommand(TCPCommand &&tcp)
 }
 
 TCPSocket::TCPSocket(int fd) : fd(fd), is_dead(false)
-{
-   struct sigaction sig{};
-   sig.sa_handler = SIG_IGN;
-   sigaction(SIGPIPE, &sig, nullptr);
-}
+{}
 
 TCPSocket::~TCPSocket() { kill_sock(); }
 
@@ -120,17 +116,20 @@ void TCPSocket::kill_sock()
    is_dead = true;
 }
 
-void TCPSocket::write_all(const char *data, std::size_t size)
+void TCPSocket::write_all(EventHandler &handler, std::string &&str)
 {
-   while (size)
-   {
-      ssize_t ret = write(fd, data, size);
-      if (ret <= 0)
-         throw std::runtime_error("Failed writing to command socket.");
+   handler.remove(*this);
 
-      data += ret;
-      size -= ret;
-   }
+   reply = std::make_shared<SocketReply>(fd, std::move(str),
+         [this, &handler](bool success)
+         {
+            if (success)
+               handler.add(shared_from_this());
+            else
+               kill_sock();
+         });
+
+   handler.add(reply);
 }
 
 void TCPSocket::parse_commands(EventHandler &event)
@@ -145,7 +144,8 @@ void TCPSocket::parse_commands(EventHandler &event)
 
       auto reply = parse_command(event, cmd);
       reply += "\r\n";
-      write_all(reply.data(), reply.size());
+
+      write_all(event, std::move(reply));
 
       command_buf.erase(0, first + 2);
    }

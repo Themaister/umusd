@@ -3,6 +3,7 @@
 #include "player.hpp"
 #include <stdexcept>
 #include <iostream>
+#include <signal.h>
 
 Command::Command() : remote(nullptr)
 {
@@ -169,4 +170,37 @@ void Command::init_command_map()
    };
 }
 
+SocketReply::SocketReply(int fd,
+      std::string &&data, std::function<void (bool)> end_cb)
+   : fd(fd), data(std::move(data)), ptr(0), end_cb(end_cb)
+{
+   struct sigaction sig{};
+   sig.sa_handler = SIG_IGN;
+   sigaction(SIGPIPE, &sig, nullptr);
+}
+
+EventHandled::PollList SocketReply::pollfds() const
+{
+   return {{fd, EPOLLOUT}};
+}
+
+void SocketReply::handle(EventHandler &handler)
+{
+   size_t to_write = data.size() - ptr;
+
+   ssize_t ret = write(fd, data.data() + ptr, to_write);
+   if (ret <= 0)
+   {
+      handler.remove(*this);
+      end_cb(false);
+   }
+   else
+      ptr += ret;
+
+   if (ptr >= data.size())
+   {
+      handler.remove(*this);
+      end_cb(true);
+   }
+}
 
