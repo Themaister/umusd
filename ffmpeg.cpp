@@ -65,6 +65,19 @@ FF& FF::operator=(FF &&ff)
    return *this;
 }
 
+FF::MediaInfo::Format FF::fmt_conv(AVSampleFormat fmt)
+{
+   switch (fmt)
+   {
+      case AV_SAMPLE_FMT_S16:
+         return MediaInfo::Format::S16;
+      case AV_SAMPLE_FMT_S32:
+         return MediaInfo::Format::S32;
+      default:
+         return MediaInfo::Format::None;
+   }
+}
+
 void FF::get_metadata(AVDictionary *meta)
 {
    auto entry = av_dict_get(meta, "title", nullptr, 0);
@@ -84,6 +97,7 @@ void FF::get_media_info()
 {
    media_info.channels = actx->channels;
    media_info.rate = actx->sample_rate;
+   media_info.fmt = fmt_conv(actx->sample_fmt);
 
    media_info.duration = fctx->streams[aud_stream]->duration * av_q2d(fctx->streams[aud_stream]->time_base);
 

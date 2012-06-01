@@ -25,8 +25,15 @@ class FF
 
       struct MediaInfo
       {
+         enum class Format : unsigned {
+            None,
+            S16,
+            S32
+         };
+
          unsigned channels;
          unsigned rate;
+         Format fmt;
 
          float duration;
 
@@ -54,6 +61,8 @@ class FF
       void resolve_codecs();
       void get_media_info();
       void get_metadata(AVDictionary *meta);
+
+      static MediaInfo::Format fmt_conv(AVSampleFormat fmt);
 };
 
 #endif

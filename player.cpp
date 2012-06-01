@@ -31,7 +31,7 @@ void Player::play_media(const std::string &path)
 void Player::play_audio()
 {
    auto info = ff->info();
-   dev->init(info.channels, info.rate, dev->default_device());
+   dev->init(info.channels, info.rate, info.fmt, dev->default_device());
    event->add(dev);
 }
 
@@ -78,6 +78,7 @@ void Player::next()
    // Attempt gapless
    if (old_info.channels != new_info.channels ||
          old_info.rate != new_info.rate ||
+         old_info.fmt != new_info.fmt ||
          !ff ||
          !dev->active())
    {
@@ -111,7 +112,7 @@ void Player::unpause()
    auto info = media_info();
    if (!dev->active())
    {
-      dev->init(info.channels, info.rate, dev->default_device());
+      dev->init(info.channels, info.rate, info.fmt, dev->default_device());
       event->add(dev);
    }
 }

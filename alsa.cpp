@@ -36,7 +36,9 @@ std::string ALSA::default_device() const
       throw std::runtime_error(error); \
 }
 
-void ALSA::init(unsigned channels, unsigned rate, const std::string &dev)
+void ALSA::init(unsigned channels, unsigned rate,
+      FF::MediaInfo::Format fmt,
+      const std::string &dev)
 {
    stop();
 
@@ -55,9 +57,23 @@ void ALSA::init(unsigned channels, unsigned rate, const std::string &dev)
                SND_PCM_ACCESS_RW_INTERLEAVED),
             "Failed to set RW access.\n");
 
+      snd_pcm_format_t format;
+      switch (fmt)
+      {
+         case FF::MediaInfo::Format::S16:
+            format = SND_PCM_FORMAT_S16;
+            break;
+         case FF::MediaInfo::Format::S32:
+            format = SND_PCM_FORMAT_S32;
+            break;
+         default:
+            format = SND_PCM_FORMAT_UNKNOWN;
+            break;
+      }
+
       TRY(snd_pcm_hw_params_set_format(pcm, params,
-               SND_PCM_FORMAT_S16_LE),
-            "Failed to set S16LE format.\n");
+               format),
+            "Failed to set sample format.\n");
 
       TRY(snd_pcm_hw_params_set_channels(pcm, params,
                channels),

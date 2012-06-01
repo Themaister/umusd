@@ -19,7 +19,9 @@ class Audio : public EventHandled
       void set_remote(Remote &remote);
       virtual void handle(EventHandler &handler);
 
-      virtual void init(unsigned channels, unsigned rate, const std::string &dev) = 0;
+      virtual void init(unsigned channels, unsigned rate,
+            FF::MediaInfo::Format fmt, const std::string &dev) = 0;
+
       virtual void write(const FF::Buffer &buf) = 0;
       virtual void stop() = 0;
 

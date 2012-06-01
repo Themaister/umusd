@@ -12,7 +12,10 @@ class ALSA : public Audio
       ~ALSA();
 
       std::string default_device() const;
-      void init(unsigned channels, unsigned rate, const std::string &dev);
+      void init(unsigned channels, unsigned rate,
+            FF::MediaInfo::Format fmt,
+            const std::string &dev);
+
       void write(const FF::Buffer &buf);
       void stop();
 
