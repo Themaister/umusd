@@ -294,17 +294,14 @@ void MainWindow::update_meta(Connection &con)
    }
 }
 
-void MainWindow::play_add(const std::string &cmd, const std::string &path)
+void MainWindow::play_add(const std::string &cmd, const std::vector<std::string> &paths)
 {
    try
    {
       Connection con;
 
-      std::string ret;
-      if (path.empty())
-         ret = con.command(stringify(cmd, "\r\n"));
-      else
-         ret = con.command(stringify(cmd, " \"", path, "\"\r\n"));
+      std::string ret = stringify(cmd, " \"", string_join(paths, "\n"), "\"\r\n");
+      ret = con.command(ret);
 
       if (ret != "OK")
          throw std::runtime_error(stringify("Connection: ", ret));
@@ -318,19 +315,19 @@ void MainWindow::play_add(const std::string &cmd, const std::string &path)
    }
 }
 
-void MainWindow::play_file(const std::string &path)
+void MainWindow::play_file(const std::vector<std::string> &paths)
 {
-   play_add("PLAY", path);
+   play_add("PLAY", paths);
 }
 
-void MainWindow::queue_file(const std::string &path)
+void MainWindow::queue_file(const std::vector<std::string> &paths)
 {
-   play_add("QUEUE", path);
+   play_add("QUEUE", paths);
 }
 
 void MainWindow::on_play_clicked()
 {
-   play_file();
+   play_file({});
 }
 
 void MainWindow::on_stop_clicked()
@@ -394,6 +391,7 @@ void MainWindow::on_open_clicked()
 {
    if (diag.run() == Gtk::RESPONSE_ACCEPT)
    {
+      diag.hide();
       std::vector<std::string> files;
 
       // This method sometimes throws awkward errors,
@@ -406,15 +404,9 @@ void MainWindow::on_open_clicked()
       {}
 
       if (!files.empty())
-      {
-         play_file(files[0]);
-         files.erase(files.begin());
-         queue_file("");
-         for (auto &file : files)
-            queue_file(file);
-      }
+         play_file(files);
    }
-
-   diag.hide();
+   else
+      diag.hide();
 }
 

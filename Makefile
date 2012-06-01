@@ -7,6 +7,7 @@ PREFIX = /usr/local
 
 CXX := g++
 CXXFLAGS += -O3 -g -std=gnu++0x -Wall -pedantic $(shell pkg-config libavutil libavformat libavcodec alsa --cflags)
+CXXFLAGS += -D__STDC_CONSTANT_MACROS
 LDFLAGS += $(shell pkg-config libavutil libavformat libavcodec alsa --libs)
 
 all: $(TARGET)

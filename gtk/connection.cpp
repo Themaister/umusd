@@ -59,10 +59,22 @@ Connection::~Connection()
    close(fd);
 }
 
+void Connection::write_all(const char *data, std::size_t size)
+{
+   while (size)
+   {
+      ssize_t ret = write(fd, data, size);
+      if (ret <= 0)
+         throw std::runtime_error("Failed to write to socket.");
+
+      data += ret;
+      size -= ret;
+   }
+}
+
 std::string Connection::command(const std::string &cmd)
 {
-   if (write(fd, cmd.data(), cmd.size()) < static_cast<ssize_t>(cmd.size()))
-      throw std::runtime_error("Failed to write to socket.");
+   write_all(cmd.data(), cmd.size());
 
    struct pollfd fds{};
    fds.events = POLLIN;

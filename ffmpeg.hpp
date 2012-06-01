@@ -1,8 +1,6 @@
 #ifndef FFMPEG_HPP__
 #define FFMPEG_HPP__
 
-#define __STDC_CONSTANT_MACROS
-
 #include <string>
 #include <cstddef>
 #include <cstdint>

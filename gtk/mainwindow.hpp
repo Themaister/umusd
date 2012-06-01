@@ -38,9 +38,9 @@ class MainWindow : public Gtk::Window
       void init_menu();
 
       void play_ctl(const std::string &cmd);
-      void play_add(const std::string &cmd, const std::string &path);
-      void play_file(const std::string &path = "");
-      void queue_file(const std::string &path);
+      void play_add(const std::string &cmd, const std::vector<std::string> &path);
+      void play_file(const std::vector<std::string> &path);
+      void queue_file(const std::vector<std::string> &path);
       void update_meta(Connection &con);
       void update_pos(Connection &con);
       void reset_meta_pos();

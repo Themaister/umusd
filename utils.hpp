@@ -39,5 +39,17 @@ inline std::vector<std::string> string_split(const std::string &str, const std::
    return res;
 }
 
+inline std::string string_join(const std::vector<std::string> &list, const std::string &delim)
+{
+   std::string res;
+   for (auto &str : list)
+   {
+      res += str;
+      res += delim;
+   }
+
+   return res;
+}
+
 #endif
 

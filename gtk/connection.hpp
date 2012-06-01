@@ -4,6 +4,7 @@
 #include "../utils.hpp"
 #include <string>
 #include <stdexcept>
+#include <cstddef>
 
 class Connection
 {
@@ -15,6 +16,8 @@ class Connection
    private:
       enum { default_port = 42878 };
       int fd;
+
+      void write_all(const char *data, std::size_t size);
 };
 
 #endif

@@ -5,12 +5,11 @@
 #include <vector>
 #include <map>
 #include <string>
-#include "eventhandler.hpp"
+#include "command.hpp"
 
 class EventHandler;
-class Remote;
 
-class TCPSocket : public EventHandled
+class TCPSocket : public Command
 {
    public:
       explicit TCPSocket(int fd);
@@ -24,11 +23,9 @@ class TCPSocket : public EventHandled
       bool dead() const;
       EventHandled::PollList pollfds() const;
       void handle(EventHandler &handler);
-      void set_remote(Remote &remote);
 
    private:
       int fd;
-      Remote *remote;
       bool is_dead;
 
       void kill_sock();
@@ -36,15 +33,8 @@ class TCPSocket : public EventHandled
 
       void flush_buffer();
       void parse_commands(EventHandler &handler);
-      void parse_command(EventHandler &handler, const std::string &cmd);
 
-      enum { max_cmd_size = 4096 };
-
-      std::map<std::string,
-         std::function<std::string (EventHandler &,
-               const std::string &)>> command_map;
-
-      void init_command_map();
+      void write_all(const char *data, std::size_t size);
 };
 
 class TCPCommand : public EventHandled
@@ -63,8 +53,8 @@ class TCPCommand : public EventHandled
 
    private:
       int fd;
-      std::vector<std::shared_ptr<TCPSocket>> connections;
       Remote *remote;
+      std::vector<std::shared_ptr<TCPSocket>> connections;
 };
 
 #endif
