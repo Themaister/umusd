@@ -10,7 +10,7 @@
 
 class EventHandler;
 
-class TCPSocket : public Command, public std::enable_shared_from_this<TCPSocket>
+class TCPSocket : public Command
 {
    public:
       explicit TCPSocket(int fd);

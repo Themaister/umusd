@@ -404,7 +404,10 @@ void MainWindow::on_open_clicked()
       {}
 
       if (!files.empty())
+      {
+         queue_file({});
          play_file(files);
+      }
    }
    else
       diag.hide();

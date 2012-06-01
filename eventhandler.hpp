@@ -11,7 +11,7 @@ class Remote;
 class EventHandler;
 class EventHandled;
 
-class EventHandled
+class EventHandled : public std::enable_shared_from_this<EventHandled>
 {
    public:
       struct FD
