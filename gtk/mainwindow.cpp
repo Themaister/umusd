@@ -10,7 +10,6 @@ inline T* managed(A&&... args)
 MainWindow::MainWindow() :
    grid(3, 2), diag(*this, "Open File ...")
 {
-   spawn();
    set_title("uMusC");
    set_icon_from_file("/usr/share/icons/umusc.png");
 
@@ -97,15 +96,39 @@ MainWindow::MainWindow() :
    add(main_box);
    show_all();
 
+   on_fork_clicked();
    Glib::signal_timeout().connect_seconds(sigc::mem_fun(*this, &MainWindow::on_timer_tick), 1); 
    on_timer_tick();
 }
 
-void MainWindow::spawn()
+void MainWindow::on_fork_clicked()
 {
    try
    {
       Glib::spawn_command_line_async("umusd");
+   }
+   catch(const Glib::SpawnError &)
+   {
+      Gtk::MessageDialog diag(*this,
+            "Failed to start umusd. It is probably not in $PATH.", true);
+
+      Gtk::Image img(Gtk::Stock::DIALOG_ERROR, Gtk::ICON_SIZE_DIALOG);
+      diag.set_image(img);
+      img.show();
+      diag.run();
+   }
+   catch(const std::exception &e)
+   {
+      std::cerr << e.what() << std::endl;
+   }
+}
+
+void MainWindow::on_kill_clicked()
+{
+   try
+   {
+      Connection con;
+      con.command("DIE\r\n");
    }
    catch(const std::exception &e)
    {
@@ -126,6 +149,21 @@ void MainWindow::init_menu()
    men->append(*action);
    action->signal_activate().connect(sigc::ptr_fun(Gtk::Main::quit));
    action->show();
+
+   men = managed<Gtk::Menu>();
+   item = managed<Gtk::MenuItem>("uMus_D");
+   item->set_use_underline();
+   item->set_submenu(*men);
+   menu.append(*item);
+   item->show();
+
+   action = managed<Gtk::MenuItem>("Start");
+   men->append(*action);
+   action->signal_activate().connect(sigc::mem_fun(*this, &MainWindow::on_fork_clicked));
+
+   action = managed<Gtk::MenuItem>("Stop");
+   men->append(*action);
+   action->signal_activate().connect(sigc::mem_fun(*this, &MainWindow::on_kill_clicked));
 
    men = managed<Gtk::Menu>();
    item = managed<Gtk::MenuItem>("_Help");
