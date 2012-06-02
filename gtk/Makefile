@@ -23,8 +23,8 @@ clean:
 
 install: all
 	install -m755 $(TARGET) $(PREFIX)/bin
-	install -m644 umusc.png /usr/share/icons
-	install -m644 umusc.desktop /usr/share/applications
+	install -m644 umusc.png $(PREFIX)/share/icons
+	install -m644 umusc.desktop $(PREFIX)/share/applications
 
 .PHONY: clean
 
