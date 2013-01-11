@@ -5,7 +5,7 @@
 #include <iostream>
 
 FF::FF(const std::string &path)
-   : fctx(nullptr), actx(nullptr), aud_stream(-1), last_pos(0.0f)
+   : fctx(nullptr), actx(nullptr), aud_stream(-1), last_pos(0.0f), planar_audio(false)
 {
    av_register_all();
 
@@ -61,6 +61,7 @@ FF& FF::operator=(FF &&ff)
    aud_stream = ff.aud_stream;
    media_info = ff.media_info;
    buffer = std::move(ff.buffer);
+   planar_audio = ff.planar_audio;
 
    return *this;
 }
@@ -69,10 +70,21 @@ FF::MediaInfo::Format FF::fmt_conv(AVSampleFormat fmt)
 {
    switch (fmt)
    {
-      case AV_SAMPLE_FMT_S16:
+      case AV_SAMPLE_FMT_S16P:
+         planar_audio = true;
+      case AV_SAMPLE_FMT_S16: // Fallthrough
          return MediaInfo::Format::S16;
+
+      case AV_SAMPLE_FMT_S32P:
+         planar_audio = true; // Fallthrough
       case AV_SAMPLE_FMT_S32:
          return MediaInfo::Format::S32;
+
+      case AV_SAMPLE_FMT_FLTP:
+         planar_audio = true; // Fallthrough
+      case AV_SAMPLE_FMT_FLT:
+         return MediaInfo::Format::Float;
+
       default:
          return MediaInfo::Format::None;
    }
@@ -131,6 +143,18 @@ void FF::resolve_codecs()
    }
 }
 
+template <typename T>
+inline void copy_deplanar(std::uint8_t *out, std::uint8_t **in, int frames, int channels)
+{
+   T* out_ptr = reinterpret_cast<T*>(out);
+   for (int c = 0; c < channels; c++, out_ptr++)
+   {
+      const T* in_ptr = reinterpret_cast<T*>(in[c]);
+      for (int i = 0; i < frames; i++)
+         out_ptr[i * channels] = in_ptr[i];
+   }
+}
+
 const FF::Buffer& FF::decode()
 {
    buffer.clear();
@@ -173,7 +197,33 @@ const FF::Buffer& FF::decode()
    if (pkt.pts != static_cast<std::int64_t>(AV_NOPTS_VALUE))
       last_pos = pkt.pts * av_q2d(fctx->streams[aud_stream]->time_base);
 
-   buffer.insert(buffer.end(), frame.data[0], frame.data[0] + size);
+   if (planar_audio)
+   {
+      std::size_t current_size = buffer.size();
+      buffer.resize(buffer.size() + size);
+      std::uint8_t* out_ptr = buffer.data() + current_size;
+
+      switch (actx->sample_fmt)
+      {
+         case AV_SAMPLE_FMT_S16P:
+            copy_deplanar<int16_t>(out_ptr, frame.data, frame.nb_samples, actx->channels);
+            break;
+
+         case AV_SAMPLE_FMT_S32P:
+            copy_deplanar<int32_t>(out_ptr, frame.data, frame.nb_samples, actx->channels);
+            break;
+
+         case AV_SAMPLE_FMT_FLTP:
+            copy_deplanar<float>(out_ptr, frame.data, frame.nb_samples, actx->channels);
+            break;
+
+         default:
+            break;
+      }
+   }
+   else
+      buffer.insert(buffer.end(), frame.data[0], frame.data[0] + size);
+
    return buffer;
 }
 

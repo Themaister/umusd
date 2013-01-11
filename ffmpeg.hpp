@@ -26,7 +26,8 @@ class FF
          enum class Format : unsigned {
             None,
             S16,
-            S32
+            S32,
+            Float
          };
 
          unsigned channels;
@@ -56,11 +57,13 @@ class FF
 
       Buffer buffer;
 
+      bool planar_audio;
+
       void resolve_codecs();
       void get_media_info();
       void get_metadata(AVDictionary *meta);
 
-      static MediaInfo::Format fmt_conv(AVSampleFormat fmt);
+      MediaInfo::Format fmt_conv(AVSampleFormat fmt);
 };
 
 #endif

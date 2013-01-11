@@ -66,6 +66,9 @@ void ALSA::init(unsigned channels, unsigned rate,
          case FF::MediaInfo::Format::S32:
             format = SND_PCM_FORMAT_S32;
             break;
+         case FF::MediaInfo::Format::Float:
+            format = SND_PCM_FORMAT_FLOAT;
+            break;
          default:
             format = SND_PCM_FORMAT_UNKNOWN;
             break;
